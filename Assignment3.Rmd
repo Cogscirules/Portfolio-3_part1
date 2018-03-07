@@ -19,6 +19,11 @@ View(d)
 ?subset
 typic = subset(d, ASD ==0)
 autist = subset(d, ASD ==1)
+
+#visit 1
+v1 = subset(d, Visit ==1)
+
+
 ```
 
 ## Multivariate linear models
@@ -38,6 +43,79 @@ The questions you will have to answer are:
 
 ```{r setup, include=FALSE}
 
+View(d2)
+mean(v1$VerbalIQ, na.rm = TRUE)
+
+#make a dataframe only with visit 1 and asds
+
+d2 = subset(v1, ASD ==1)
+
+
+#remove NAs
+d3 = d2[complete.cases(d2), ]
+
+
+# Verbal IQ
+
+mean(d3$VerbalIQ)
+sd(d3$VerbalIQ)
+
+m1 = map(
+  alist(
+  VerbalIQ~dnorm( mu, sigma ),
+  mu <- a + b*ADOS,
+  a ~dnorm( 18 , 10 ), #giving more room to deviate
+  b ~dnorm( 0 , 5 ), #being agnostic, not really skeptic neither optimistc
+  sigma~dunif( 0 , 50 )
+),
+data=d3 )
+precis(m1)
+
+vq = extract.samples(m1)
+
+dens(vq)
+plot(vq)
+
+#Nonverbal IQ
+
+mean(d3$NonVerbalIQ)
+sd(d3$NonVerbalIQ)
+
+m2 = map(
+  alist(
+  NonVerbalIQ~dnorm( mu, sigma ),
+  mu <- a + b*ADOS,
+  a ~dnorm( 27 , 7 ), #giving more room to deivate
+  b ~dnorm( 0 , 5 ), #being agnostic, not really skeptic neither optimistc
+  sigma~dunif( 0 , 50 )
+),
+data=d3 )
+
+precis(m2)
+
+nq = extract.samples(m2)
+
+
+#Social IQ
+
+mean(d3$SocialIQ)
+sd(d3$SocialIQ)
+
+m3 = map(
+  alist(
+  NonVerbalIQ~dnorm( mu, sigma ),
+  mu <- a + b*ADOS,
+  a ~dnorm( 78 , 13 ), #giving more room to deivate
+  b ~dnorm( 0 , 5 ), #being agnostic, not really skeptic neither optimistc
+  sigma~dunif( 0 , 50 )
+),
+data=d3 )
+
+precis(m3)
+
+sq = extract.samples(m3)
+
+#LINK
 
 ```
 
