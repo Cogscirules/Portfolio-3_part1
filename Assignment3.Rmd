@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 
 library(pacman)
-p_load(stringr, dplyr, rethinking, ggplot2, gridExtra)
+p_load(stringr, dplyr, rethinking, ggplot2, gridExtra, brms)
 setwd("C:/Users/Bruger/Desktop/Cognitive Science/R/Portfolio-3_part1")
 d = read.csv("Assignment3Data.csv")
 
@@ -115,7 +115,60 @@ precis(m3)
 
 sq = extract.samples(m3)
 
-#LINK
+#plotting (see slides)
+
+#Model 1
+plot( VerbalIQ ~ ADOS , data=d3 )
+abline( a=coef(m1)["a"] , b=coef(m1)["b"] )
+
+post1 <- extract.samples( m1 , n=20 )
+
+# display raw data and sample size
+plot( d3$VerbalIQ , d3$ADOS ,
+xlim=range(d3$VerbalIQ) , ylim=range(d3$ADOS) ,
+col=rangi2 , xlab="ADOS" , ylab="VerbalIQ" )
+mtext(concat("N = ",N))
+# plot the lines, with transparency
+for ( i in 1:20 )
+abline( a=post1$a[i] , b=post1$b[i] , col=col.alpha("black",0.3) )
+
+
+
+
+#Model 2
+plot( NonVerbalIQ ~ ADOS , data=d3 )
+abline( a=coef(m2)["a"] , b=coef(m2)["b"] )
+
+post2 <- extract.samples( m2 , n=20 )
+
+# display raw data and sample size
+plot( d3$VerbalIQ , d3$ADOS ,
+xlim=range(d3$VerbalIQ) , ylim=range(d3$ADOS) ,
+col=rangi2 , xlab="ADOS" , ylab="NonVerbalIQ" )
+mtext(concat("N = ",N))
+# plot the lines, with transparency
+for ( i in 1:20 )
+abline( a=post2$a[i] , b=post2$b[i] , col=col.alpha("black",0.3) )
+
+
+
+
+
+#Model 3
+plot( SocialIQ ~ ADOS , data=d3 )
+abline( a=coef(m3)["a"] , b=coef(m3)["b"] )
+
+post3 <- extract.samples( m3 , n=20 )
+
+# display raw data and sample size
+plot( d3$VerbalIQ , d3$ADOS ,
+xlim=range(d3$VerbalIQ) , ylim=range(d3$ADOS) ,
+col=rangi2 , xlab="ADOS" , ylab="SocialIQ" )
+mtext(concat("N = ",N))
+# plot the lines, with transparency
+for ( i in 1:20 )
+abline( a=post3$a[i] , b=post3$b[i] , col=col.alpha("black",0.3) )
+
 
 ```
 
@@ -124,6 +177,35 @@ sq = extract.samples(m3)
 2.2. Build the model, assess its quality, write a few lines interpreting the results.
 
 ```{r setup, include=FALSE}
+#Do the different aspects of IQ account for different portions of the variance in ADOS?
+
+# y = a + bV(erbaliq) + bN(onVerbaliq) + bS(ocialIQ) + e
+
+#standardize predictor
+d3$VerbalIQ = (d3$VerbalIQ-mean(d3$VerbalIQ))/sd(d3$VerbalIQ)
+
+d3$NonVerbalIQ = (d3$NonVerbalIQ-mean(d3$NonVerbalIQ))/sd(d3$NonVerbalIQ)
+
+d3$SocialIQ = (d3$SocialIQ-mean(d3$SocialIQ))/sd(d3$SocialIQ)
+
+#Fit Model
+
+mean(d3$ADOS)
+sd(d3$ADOS)
+
+m4 <- map(
+alist(
+ADOS ~ dnorm( mu , sigma ) ,
+mu <- a + bV*VerbalIQ + bN*NonVerbalIQ + bS*SocialIQ ,
+a ~ dnorm( 14 , 7 ) ,
+bV ~ dnorm( 0 , 1 ) ,
+bN ~ dnorm( 0 , 1 ) ,
+bS ~ dnorm( 0 , 1 ) ,
+sigma ~ dunif( 0 , 10 )
+) ,
+data = d3 )
+precis( m4 )
+
 
 
 ```
