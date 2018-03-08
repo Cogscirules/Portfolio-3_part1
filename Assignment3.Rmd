@@ -71,6 +71,9 @@ m1 = map(
 data=d3 )
 precis(m1)
 
+# a person 1 ADOS point higher will fall 1,10 points in verbal IQ. 89 % of the posterior probability lies between -1.40 and -0.80. Suggesting a negative correlation
+#sigma = 95 % of plausible ADOS points lies within 5,19 points of the mean.
+
 vq = extract.samples(m1)
 
 dens(vq)
@@ -93,6 +96,9 @@ data=d3 )
 
 precis(m2)
 
+# A person rising in ados point will fall 0.61 point in nonverbal IQ, indicating a negative correlation w/ 89 % of the posterior probability lying between -0.86 and -0.36.
+# An SD of the error is 4.35 of the mean.
+
 nq = extract.samples(m2)
 
 
@@ -103,7 +109,7 @@ sd(d3$SocialIQ)
 
 m3 = map(
   alist(
-  NonVerbalIQ~dnorm( mu, sigma ),
+  SocialIQ~dnorm( mu, sigma ),
   mu <- a + b*ADOS,
   a ~dnorm( 78 , 13 ), #giving more room to deivate
   b ~dnorm( 0 , 5 ), #being agnostic, not really skeptic neither optimistc
@@ -112,6 +118,8 @@ m3 = map(
 data=d3 )
 
 precis(m3)
+
+# Rise in ADOS correlates negatively with social IQ, with 1 rise in ados resulting in -1.47 points in social IQ. 89% posterior probability lies between -1.95% and -0.99. And SD of the error is at 8.34.
 
 sq = extract.samples(m3)
 
@@ -181,6 +189,10 @@ abline( a=post3$a[i] , b=post3$b[i] , col=col.alpha("black",0.3) )
 
 # y = a + bV(erbaliq) + bN(onVerbaliq) + bS(ocialIQ) + e
 
+
+#Does it make sense to have all IQ measures in the same model? Motivate answer and do it.
+
+
 #standardize predictor
 d3$VerbalIQ = (d3$VerbalIQ-mean(d3$VerbalIQ))/sd(d3$VerbalIQ)
 
@@ -198,14 +210,15 @@ alist(
 ADOS ~ dnorm( mu , sigma ) ,
 mu <- a + bV*VerbalIQ + bN*NonVerbalIQ + bS*SocialIQ ,
 a ~ dnorm( 14 , 7 ) ,
-bV ~ dnorm( 0 , 1 ) ,
-bN ~ dnorm( 0 , 1 ) ,
-bS ~ dnorm( 0 , 1 ) ,
-sigma ~ dunif( 0 , 10 )
+bV ~ dnorm( 33 , 3 ) ,
+bN ~ dnorm( 35 , 2 ) ,
+bS ~ dnorm( 98 , 4 ) ,
+sigma ~ dunif( 0 , 5 )
 ) ,
 data = d3 )
 precis( m4 )
 
+#A model containing all predictors of ADOS elicited an aplha (mean) of 25.89 w/ 4 SD. 89% posterior probability lies betweem 19.26 and 32.51. The model elicited and SD of the error of 3.
 
 
 ```
@@ -214,6 +227,49 @@ precis( m4 )
 3. Let's now include also the TD children. Does it make sense to ask whether IQ and ADOS are related? Motivate your answer. In any case, if you wanted to build a model to answer that question, which model would you build? Run the model, assess its quality, write a few lines interpreting the results.
 
 ```{r setup, include=FALSE}
+
+all = v1[complete.cases(v1), ]
+View(all)
+
+View(v1)
+
+#standardize predictor
+all$VerbalIQ = (all$VerbalIQ-mean(v1$VerbalIQ))/sd(all$VerbalIQ)
+
+all$NonVerbalIQ = (all$NonVerbalIQ-mean(all$NonVerbalIQ))/sd(all$NonVerbalIQ)
+
+all$SocialIQ = (all$SocialIQ-mean(all$SocialIQ))/sd(all$SocialIQ)
+
+#Fit Model
+
+mean(all$ADOS)
+sd(all$ADOS)
+
+mean(all$VerbalIQ)
+sd(all$VerbalIQ)
+
+mean(all$NonVerbalIQ)
+sd(all$NonVerbalIQ)
+
+mean(all$SocialIQ)
+sd(all$SocialIQ)
+
+m5 <- map(
+alist(
+ADOS ~ dnorm( mu , sigma ) ,
+mu <- a + bV*VerbalIQ + bN*NonVerbalIQ + bS*SocialIQ ,
+a ~ dnorm( 7 , 7 ) ,
+bV ~ dnorm( 19 , 6 ) ,
+bN ~ dnorm( 26 , 4 ) ,
+bS ~ dnorm( 90 , 15 ) ,
+sigma ~ dunif( 0 , 5 )
+) ,
+data = all )
+precis( m5 )
+
+
+
+
 
 
 ```
