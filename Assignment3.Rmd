@@ -105,7 +105,7 @@ m3 = map(
   alist(
   SocialIQ~dnorm( mu, sigma ),
   mu <- a + b*ADOS,
-  a ~dnorm( 78 , 13 ), #giving more room to deivate
+  a ~dnorm( 77 , 13 ), #giving more room to deivate
   b ~dnorm( 0 , 5 ), #being agnostic, not really skeptic neither optimistc
   sigma~dunif( 0 , 50 )
 ),
@@ -116,15 +116,37 @@ precis(m3)
 # Rise in ADOS correlates negatively with social IQ, with 1 rise in ados resulting in -1.47 points in social IQ. 89% posterior probability lies between -1.95% and -0.99. And SD of the error is at 8.34.
 
 
+
+#A model to see the correlations w/ updates priors
+
+
+corm <- map(
+alist(
+ADOS ~ dnorm( mu , sigma ) ,
+mu <- a + bV*VerbalIQ + bN*NonVerbalIQ + bS*SocialIQ ,
+a ~ dnorm( 14 , 5 ) ,
+bV ~ dnorm( 33 , 5 ) ,
+bN ~ dnorm( 11 , 4 ) ,
+bS ~ dnorm( 98 , 8 ) ,
+sigma ~ dunif( 0 , 5 )
+) ,
+data = d3 )
+precis( corm, corr = TRUE )
+
+
+
 #plotting (see slides)
 
 #Model 1
 plot( VerbalIQ ~ ADOS , data=d3 )
 abline( a=coef(m1)["a"] , b=coef(m1)["b"] )
 
-post1 <- extract.samples( m1 , n=20 )
 
 # display raw data and sample size
+
+N = 30
+post1 <- extract.samples( m1 , n=20 )
+
 plot( d3$VerbalIQ , d3$ADOS ,
 xlim=range(d3$VerbalIQ) , ylim=range(d3$ADOS) ,
 col=rangi2 , xlab="ADOS" , ylab="VerbalIQ" )
@@ -140,11 +162,15 @@ abline( a=post1$a[i] , b=post1$b[i] , col=col.alpha("black",0.3) )
 plot( NonVerbalIQ ~ ADOS , data=d3 )
 abline( a=coef(m2)["a"] , b=coef(m2)["b"] )
 
-post2 <- extract.samples( m2 , n=20 )
+
 
 # display raw data and sample size
-plot( d3$VerbalIQ , d3$ADOS ,
-xlim=range(d3$VerbalIQ) , ylim=range(d3$ADOS) ,
+
+N = 30
+post2 <- extract.samples( m2 , n=20 )
+
+plot( d3$NonVerbalIQ , d3$ADOS ,
+xlim=range(d3$NonVerbalIQ) , ylim=range(d3$ADOS) ,
 col=rangi2 , xlab="ADOS" , ylab="NonVerbalIQ" )
 mtext(concat("N = ",N))
 # plot the lines, with transparency
@@ -159,11 +185,13 @@ abline( a=post2$a[i] , b=post2$b[i] , col=col.alpha("black",0.3) )
 plot( SocialIQ ~ ADOS , data=d3 )
 abline( a=coef(m3)["a"] , b=coef(m3)["b"] )
 
+# display raw data and sample size
+
+N= 30
 post3 <- extract.samples( m3 , n=20 )
 
-# display raw data and sample size
-plot( d3$VerbalIQ , d3$ADOS ,
-xlim=range(d3$VerbalIQ) , ylim=range(d3$ADOS) ,
+plot( d3$SocialIQ , d3$ADOS ,
+xlim=range(d3$SocialIQ) , ylim=range(d3$ADOS) ,
 col=rangi2 , xlab="ADOS" , ylab="SocialIQ" )
 mtext(concat("N = ",N))
 # plot the lines, with transparency
@@ -179,6 +207,8 @@ abline( a=post3$a[i] , b=post3$b[i] , col=col.alpha("black",0.3) )
 
 ```{r setup, include=FALSE}
 #Do the different aspects of IQ account for different portions of the variance in ADOS?
+
+#well if two of the betas are very correlated, then they explain the same phenomena and we cannot use it
 
 # y = a + bV(erbaliq) + bN(onVerbaliq) + bS(ocialIQ) + e
 
