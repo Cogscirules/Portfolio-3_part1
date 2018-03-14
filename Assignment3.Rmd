@@ -8,11 +8,11 @@ output: html_document
 ```{r setup, include=FALSE}
 
 library(pacman)
-p_load(stringr, dplyr, rethinking, ggplot2, gridExtra, brms)
+p_load(stringr, dplyr, ggplot2, gridExtra, brms, devtools)
 setwd("C:/Users/Bruger/Desktop/Cognitive Science/R/Portfolio-3_part1")
 d = read.csv("Assignment3Data.csv")
 
-
+devtools::install_github("rmcelreath/rethinking", force = TRUE)
 
 View(d)
 
@@ -138,7 +138,7 @@ precis( corm, corr = TRUE )
 #plotting (see slides)
 
 #Model 1
-plot( VerbalIQ ~ ADOS , data=d3 )
+#plot( VerbalIQ ~ ADOS , data=d3 )
 abline( a=coef(m1)["a"] , b=coef(m1)["b"] )
 
 
@@ -148,7 +148,7 @@ N = 30
 post1 <- extract.samples( m1 , n=20 )
 
 plot( d3$VerbalIQ , d3$ADOS ,
-xlim=range(d3$VerbalIQ) , ylim=range(d3$ADOS) ,
+xlim=range(d3$ADOS) , ylim=range(d3$VerbalIQ) ,
 col=rangi2 , xlab="ADOS" , ylab="VerbalIQ" )
 mtext(concat("N = ",N))
 # plot the lines, with transparency
@@ -159,7 +159,7 @@ abline( a=post1$a[i] , b=post1$b[i] , col=col.alpha("black",0.3) )
 
 
 #Model 2
-plot( NonVerbalIQ ~ ADOS , data=d3 )
+#plot( NonVerbalIQ ~ ADOS , data=d3 )
 abline( a=coef(m2)["a"] , b=coef(m2)["b"] )
 
 
@@ -170,7 +170,7 @@ N = 30
 post2 <- extract.samples( m2 , n=20 )
 
 plot( d3$NonVerbalIQ , d3$ADOS ,
-xlim=range(d3$NonVerbalIQ) , ylim=range(d3$ADOS) ,
+xlim=range(d3$ADOS) , ylim=range(d3$NonVerbalIQ) ,
 col=rangi2 , xlab="ADOS" , ylab="NonVerbalIQ" )
 mtext(concat("N = ",N))
 # plot the lines, with transparency
@@ -182,7 +182,7 @@ abline( a=post2$a[i] , b=post2$b[i] , col=col.alpha("black",0.3) )
 
 
 #Model 3
-plot( SocialIQ ~ ADOS , data=d3 )
+#plot( SocialIQ ~ ADOS , data=d3 )
 abline( a=coef(m3)["a"] , b=coef(m3)["b"] )
 
 # display raw data and sample size
@@ -191,7 +191,7 @@ N= 30
 post3 <- extract.samples( m3 , n=20 )
 
 plot( d3$SocialIQ , d3$ADOS ,
-xlim=range(d3$SocialIQ) , ylim=range(d3$ADOS) ,
+xlim=range(d3$ADOS) , ylim=range(d3$SocialIQ) ,
 col=rangi2 , xlab="ADOS" , ylab="SocialIQ" )
 mtext(concat("N = ",N))
 # plot the lines, with transparency
@@ -199,6 +199,9 @@ for ( i in 1:20 )
 abline( a=post3$a[i] , b=post3$b[i] , col=col.alpha("black",0.3) )
 
 
+grid.arrange(post1, post2, post3)
+
+gridExtra::grid.arrange(post1,post2,post3)
 ```
 
 2. Do the different aspects of IQ account for different portions of the variance in ADOS? 
@@ -210,57 +213,88 @@ abline( a=post3$a[i] , b=post3$b[i] , col=col.alpha("black",0.3) )
 
 #well if two of the betas are very correlated, then they explain the same phenomena and we cannot use it
 
-# y = a + bV(erbaliq) + bN(onVerbaliq) + bS(ocialIQ) + e
+# y = a + bV(erbaliq) + bN(onVerbaliq) + bS(ocialIQ)
 
 
 #Does it make sense to have all IQ measures in the same model? Motivate answer and do it.
 
-
-#centerlize
-d3$VerbalIQ = d3$VerbalIQ - mean(d3$VerbalIQ)
-
-d3$NonVerbalIQ = d3$NonVerbalIQ - mean(d3$NonVerbalIQ)
-
-d3$SocialIQ = d3$SocialIQ - mean(d3$SocialIQ)
-
-#standardize 
-# d3$VerbalIQ = (d3$VerbalIQ-mean(d3$VerbalIQ))/sd(d3$VerbalIQ)
-# 
-# d3$NonVerbalIQ = (d3$NonVerbalIQ-mean(d3$NonVerbalIQ))/sd(d3$NonVerbalIQ)
-# 
-# d3$SocialIQ = (d3$SocialIQ-mean(d3$SocialIQ))/sd(d3$SocialIQ)
-
 #Fit Model
 
-View(d3)
+#scaling 
 
-mean(d3$ADOS)
-sd(d3$ADOS)
+scale(d3$VerbalIQ)
+scale(d3$NonVerbalIQ)
+scale(d3$SocialIQ)
 
 mean(d3$VerbalIQ)
 sd(d3$VerbalIQ)
 
-mean(d3$NonVerbalIQ)
-sd(d3$NonVerbalIQ)
 
 m4 <- map(
 alist(
-ADOS ~ dnorm( mu , sigma ) ,
-mu <- a + bV*VerbalIQ + bN*NonVerbalIQ + bS*SocialIQ ,
-a ~ dnorm( 14 , 7 ) ,
-bV ~ dnorm( 0 , 1 ) ,
-bN ~ dnorm( 35 , 1 ) ,
-bS ~ dnorm( 98 , 4 ) ,
-sigma ~ dunif( 0 , 5 )
+VerbalIQ ~ dnorm( mu , sigma ) ,
+mu <- a + bN*NonVerbalIQ  ,
+a ~ dnorm( 18 , 8 ) ,
+bN ~ dnorm( 0 , 5 ) ,
+sigma ~ dunif( 0 , 50 )
 ) ,
 data = d3 )
-precis( m4, corr = TRUE )
+precis(m4, corr = TRUE)
 
-#A model containing all predictors of ADOS elicited an aplha (mean) of 25.89 w/ 4 SD. 89% posterior probability lies betweem 19.26 and 32.51. The model elicited and SD of the error of 3.
-
-#ADOS --> positively correlated with verbal iq, negatively correlated with nonverbal iq (-0.56) and social iq (-0.76)
+#### 0.69
 
 
+mean(d3$NonVerbalIQ)
+sd(d3$NonVerbalIQ)
+
+m5 <- map(
+alist(
+NonVerbalIQ ~ dnorm( mu , sigma ) ,
+mu <- a + bS*SocialIQ  ,
+a ~ dnorm( 27 , 5 ) ,
+bS ~ dnorm( 0 , 5 ) ,
+sigma ~ dunif( 0 , 50 )
+) ,
+data = d3 )
+precis(m5, corr = TRUE)
+
+#### 0.07
+
+mean(d3$SocialIQ)
+sd(d3$SocialIQ)
+
+m6 <- map(
+alist(
+SocialIQ ~ dnorm( mu , sigma ) ,
+mu <- a + bV*VerbalIQ  ,
+a ~ dnorm( 78 , 5 ) ,
+bV ~ dnorm( 0 , 5 ) ,
+sigma ~ dunif( 0 , 50 )
+) ,
+data = d3 )
+precis(m6, corr = TRUE)
+
+#### 0.60
+
+
+#### The betas are not completely correlated, suggesting the G factor doe snot explain all. Nonverbal + social IQ are very little correlated meaning there is very little shared variance. Those would go good in a model together, since they express two difference phenomenas.
+
+
+m7 <- map(
+alist(
+ADOS ~ dnorm( mu , sigma ) ,
+mu <- a + bN*NonVerbalIQ + bS*SocialIQ ,
+a ~ dnorm( 78 , 5 ) ,
+bN ~ dnorm( 0 , 1 ) , #lets try to be more liberal
+bS ~ dnorm( 0, 1 ) , 
+sigma ~ dunif( 0 , 50 )
+) ,
+data = d3 )
+precis(m7)
+
+precis_plot(m7)
+
+devtools::install_github("rmcelreath/rethinking", force = TRUE)
 #89% interval = the probability that the true result given the model 
 
 ```
