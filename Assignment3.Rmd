@@ -8,9 +8,11 @@ output: html_document
 ```{r setup, include=FALSE}
 
 library(pacman)
-p_load(stringr, dplyr, ggplot2, gridExtra, brms, devtools)
+p_load(stringr, dplyr, ggplot2, gridExtra, brms, devtools, mvtnorm, rethinking, Brobdingnag)
 setwd("C:/Users/Bruger/Desktop/Cognitive Science/R/Portfolio-3_part1")
 d = read.csv("Assignment3Data.csv")
+
+install.packages("mvtnorm")
 
 devtools::install_github("rmcelreath/rethinking", force = TRUE)
 
@@ -226,6 +228,7 @@ scale(d3$VerbalIQ)
 scale(d3$NonVerbalIQ)
 scale(d3$SocialIQ)
 
+d4 = scale(d3)
 mean(d3$VerbalIQ)
 sd(d3$VerbalIQ)
 
@@ -284,17 +287,53 @@ m7 <- map(
 alist(
 ADOS ~ dnorm( mu , sigma ) ,
 mu <- a + bN*NonVerbalIQ + bS*SocialIQ ,
-a ~ dnorm( 78 , 5 ) ,
+a ~ dnorm( 0 , 5 ) ,
 bN ~ dnorm( 0 , 1 ) , #lets try to be more liberal
 bS ~ dnorm( 0, 1 ) , 
 sigma ~ dunif( 0 , 50 )
-) ,
-data = d3 )
-precis(m7)
+) , 
+data = as.data.frame(d4) ) 
+precis(m7, corr = TRUE)
 
-precis_plot(m7)
 
-devtools::install_github("rmcelreath/rethinking", force = TRUE)
+plot(precis(m7))
+dens(precis(m7))
+
+#Quality assement
+#Make density plots from sim values
+
+sim.Ados <- sim(m7, data = as.data.frame(d4))
+#)
+dens(sim.Ados, col = "red", xlim = c(-2, 2.5), ylim = c(0, 1),  xlab = "ADOS")
+par(new=TRUE)
+dens(as.data.frame(d4)$ADOS, xlim = c(-2,2.5), ylim = c(0,1), xlab = "ADOS")
+
+
+#Let's quality check a model with all three predictors
+
+m8 <- map(
+alist(
+ADOS ~ dnorm( mu , sigma ) ,
+mu <- a + bN*NonVerbalIQ + bS*SocialIQ + bV*VerbalIQ,
+a ~ dnorm( 0 , 5 ) ,
+bN ~ dnorm( 0 , 1 ) , #lets try to be more liberal
+bS ~ dnorm( 0, 1 ) ,
+bV ~ dnorm( 0, 1 ) ,
+sigma ~ dunif( 0 , 50 )
+) , 
+data = as.data.frame(d4) ) 
+precis(m8, corr = TRUE)
+
+
+plot(precis(m8))
+
+sim.Ados <- sim(m8, data = as.data.frame(d4))
+#)
+dens(sim.Ados, col = "red", xlim = c(-2, 2.5), ylim = c(0, 1),  xlab = "ADOS")
+par(new=TRUE)
+dens(as.data.frame(d4)$ADOS, xlim = c(-2,2.5), ylim = c(0,1), xlab = "ADOS")
+
+
 #89% interval = the probability that the true result given the model 
 
 ```
@@ -309,12 +348,7 @@ View(all)
 
 View(v1)
 
-#standardize predictor
-all$VerbalIQ = (all$VerbalIQ-mean(v1$VerbalIQ))/sd(all$VerbalIQ)
-
-all$NonVerbalIQ = (all$NonVerbalIQ-mean(all$NonVerbalIQ))/sd(all$NonVerbalIQ)
-
-all$SocialIQ = (all$SocialIQ-mean(all$SocialIQ))/sd(all$SocialIQ)
+scall = scale(all)
 
 #Fit Model
 
