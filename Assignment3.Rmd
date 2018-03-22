@@ -365,16 +365,25 @@ precis(m9)
 #of the two models above withut interactions m7 is the ost appropriate
 
 
-#ados is not conditional on IQ, or Iq conditional on ADOS, however they are good predictors of autism. 
+#Model without interaction
+m7.2 <- map(
+alist(
+ADOS ~ dnorm( mu , sigma ) ,
+mu <- a + bN*NonVerbalIQ + bS*SocialIQ ,
+a ~ dnorm( 0 , 5 ) ,
+bN ~ dnorm( 0 , 1 ) , #lets try to be more liberal
+bS ~ dnorm( 0, 1 ) , 
+sigma ~ dunif( 0 , 50 )
+) , 
+data = as.data.frame(scall) ) 
 
-sim.Ados <- sim(m9, data = as.data.frame(scall))
-#)
-dens(sim.Ados, col = "red", xlim = c(-2, 2.5), ylim = c(0, 1),  xlab = "ADOS")
-par(new=TRUE)
-dens(as.data.frame(d4)$ADOS, xlim = c(-2,2.5), ylim = c(0,1), xlab = "ADOS")
 
 
 
+compare (m7.2, m9)
+
+(ados.models = compare(m7.2,m9))
+plot(ados.models, SE=TRUE, dSE=TRUE)
 
 ```
 
